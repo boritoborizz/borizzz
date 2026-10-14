@@ -1,19 +1,27 @@
-# Borizzz Online
+# Borizzz Online – synchronisiertes Spiel
 
-## Was ist enthalten?
-Eine Vercel-fertige Next.js-Web-App mit Startseite, Raum-Erstellung, Raum-Beitritt, Lobby und Spieloberfläche.
+Dieses Update ergänzt echte synchronisierte Grundzüge über eine serverseitige Vercel-API. Verdeckte Hände liegen in `room_private` und werden nie an andere Spieler ausgegeben. Der Browser erhält nur die eigene Hand und öffentliche Kartenanzahlen.
 
-## Auf GitHub hochladen
-1. Erstelle auf GitHub ein neues leeres Repository namens `borizzz-online`.
-2. Klicke auf **Add file → Upload files**.
-3. Entpacke diese ZIP-Datei auf deinem Computer.
-4. Ziehe den gesamten Inhalt des entpackten Ordners in GitHub und klicke **Commit changes**.
+## A. Supabase vorbereiten
+1. Supabase → SQL Editor → New query.
+2. Inhalt von `supabase/migration.sql` einfügen und Run drücken.
+3. Supabase → Project Settings → API Keys → Secret keys: den `service_role`/Secret Key kopieren. Nicht in den Browser oder Chat einfügen.
 
-## Auf Vercel deployen
-1. Öffne Vercel → Add New → Project.
-2. Wähle das GitHub-Repository `borizzz-online`.
-3. Vercel erkennt Next.js automatisch.
-4. Klicke Deploy.
+## B. Dateien ersetzen in GitHub
+ZIP entpacken. Im Repository die folgenden Dateien/Ordner am Repository-Root hochladen und ersetzen:
+- `package.json`
+- `app/layout.js`
+- `app/page.js`
+- `app/api/game/route.js` (Ordner `app/api/game` neu anlegen)
+- `app/styles.css`
 
-## Wichtig: Echter Mehrspieler-Modus
-Diese erste Online-Version ist die veröffentlichbare Oberfläche und Projektstruktur. Für echte Raumcodes über mehrere Geräte wird im nächsten Schritt Supabase Realtime eingebunden. Dafür wird ein kostenloses Supabase-Projekt benötigt.
+## C. Vercel Environment Variables
+Vercel → Project → Environment Variables. Füge hinzu:
+- `SUPABASE_URL` = Project URL
+- `SUPABASE_SERVICE_ROLE_KEY` = Supabase Secret/service_role key
+Beide auf **Secret** stellen und nur **Production** auswählen (Preview optional). Dieser Schlüssel muss serverseitig bleiben; kein `NEXT_PUBLIC_`-Prefix.
+
+## D. Neu deployen und testen
+Nach GitHub-Commit wird Vercel automatisch deployen. Dann in zwei Browsern beitreten, Host startet Partie. Unterstützt sind Lobby, Deal, Startkarten, Ziehen, Tauschen/Ablegen, 10s-Reaktion, Ablage nehmen, gleiche eigene/fremde Karte, Strafkarte, Bube/Dame/König, BORIZZZ und Übergabe. Die Echtzeit-Synchronisierung läuft über kurze Server-Polls.
+
+Hinweis: Dies ist ein privater Prototyp. Vor breiter öffentlicher Nutzung sollten zusätzlich Rate-Limits und Accounts ergänzt werden.
