@@ -8,7 +8,7 @@ const store = { rooms: [], room_players: [], room_private: [] };
 let seq = 0;
 class Query {
   constructor(table) { this.table = table; this.filters = []; this.op = 'select'; }
-  select() { return this; }
+  select() { if (this.op === 'update') this.returning = true; return this; }
   eq(k, v) { this.filters.push([k, v]); return this; }
   order(k) { this.orderKey = k; return this; }
   insert(p) { this.op = 'insert'; this.payload = p; return this; }
@@ -28,13 +28,14 @@ class Query {
     if (this.op === 'upsert') {
       const key = this.table === 'room_private' ? 'room_id' : 'id';
       const old = rows.find(r => r[key] === this.payload[key]);
-      if (old) Object.assign(old, this.payload); else rows.push({ ...this.payload });
+      if (old) Object.assign(old, JSON.parse(JSON.stringify(this.payload))); else rows.push(JSON.parse(JSON.stringify(this.payload)));
       return { error: null };
     }
     const found = rows.filter(r => this.filters.every(([k, v]) => r[k] === v));
-    if (this.op === 'update') { found.forEach(r => Object.assign(r, this.payload)); return { error: null }; }
+    if (this.op === 'update') { found.forEach(r => Object.assign(r, JSON.parse(JSON.stringify(this.payload)))); return this.returning ? { data: found.map(r => ({ id: r.id, room_id: r.room_id })), error: null } : { error: null }; }
     if (this.orderKey) found.sort((a, b) => a[this.orderKey] - b[this.orderKey]);
-    return { data: single ? found[0] || null : found, error: null };
+    const snapshot = JSON.parse(JSON.stringify(found));
+    return { data: single ? snapshot[0] || null : snapshot, error: null };
   }
 }
 const source = fs.readFileSync(require('path').join(__dirname, '..', 'app/api/game/route.js'), 'utf8')
@@ -87,5 +88,10 @@ async function ask(action, token, room, extra = {}) {
   assert.equal(host.phase, 'reaction');
   host = await ask('advance', 'host', room);
   assert.equal(host.players[1].turn, true);
-  console.log('PASS: lobby, both private peeks, hidden card values, draw, discard, turn handoff');
+  const privateRow = store.room_private.find(r => r.room_id === host.room.id);
+  privateRow.state.phase = 'reaction'; privateRow.state.deadline = Date.now() + 10000; privateRow.state.turn = 1;
+  const results = await Promise.all(['guest', 'guest'].map(async () => { const res = await context.module.exports.POST({ json: async () => ({ action: 'advance', token: 'guest', room }) }); return res.status; }));
+  assert.equal(results.filter(x => x === 200).length, 1, `one concurrent action should win: ${results}`);
+  assert.equal(results.filter(x => x === 409).length, 1, `stale concurrent action should conflict: ${results}`);
+  console.log('PASS: lobby, both private peeks, hidden card values, draw, discard, turn handoff, concurrent-write conflict');
 })().catch(e => { console.error(e); process.exitCode = 1; });
