@@ -2,7 +2,7 @@
 .motion-ghost{box-sizing:border-box;margin:0}
 .motion-muted{opacity:.18!important}
 .motion-spotlight{outline:4px solid #f2c76e!important;outline-offset:5px;box-shadow:0 0 0 9px rgba(242,199,110,.2),0 10px 25px #0008!important;transform:translateY(-8px) rotate(-3deg);z-index:5;transition:transform .22s ease,box-shadow .22s ease}
-.motion-caption:not(:empty){position:fixed;z-index:18;bottom:20px;left:50%;transform:translateX(-50%);max-width:min(92vw,620px);padding:10px 16px;border:1px solid #f2c76e;border-radius:9px;background:#092018f2;color:#fbf1d8;box-shadow:0 6px 20px #0008;text-align:center;font-size:14px}
+.motion-caption:not(:empty){position:fixed;z-index:18;bottom:16px;left:16px;transform:none;width:max-content;max-width:min(280px,calc(100vw - 32px));padding:7px 10px;border:1px solid rgba(251,241,216,.22);border-left:3px solid #f2c76e;border-radius:6px;background:rgba(9,32,24,.9);color:#fbf1d8;box-shadow:0 3px 10px #0005;text-align:left;font-size:11px;line-height:1.4;pointer-events:none}
 .start-peek{position:fixed;inset:0;z-index:25;display:grid;place-items:center;padding:20px;background:rgba(4,18,13,.94);text-align:center}
 .start-peek-panel{width:min(100%,480px);padding:28px 20px;background:#103c2d;border:1px solid rgba(242,199,110,.55);border-radius:16px;box-shadow:0 20px 65px #0008}
 .start-peek-panel h2{margin:8px 0;font-size:clamp(22px,5vw,30px)}
@@ -12,5 +12,5 @@
 .start-peek-cards small{display:block;color:#f2c76e}
 .playing-card:focus-visible,.gold:focus-visible,.outline:focus-visible,.red:focus-visible,.small-button:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .result{max-height:70vh;overflow-y:auto;z-index:10}
-@media(max-width:480px){.start-peek-cards .start-card{width:96px;height:136px;font-size:48px}.start-peek-panel{padding:22px 14px}.motion-caption:not(:empty){bottom:90px;font-size:12px}}
+@media(max-width:480px){.start-peek-cards .start-card{width:96px;height:136px;font-size:48px}.start-peek-panel{padding:22px 14px}.motion-caption:not(:empty){bottom:86px;left:12px;max-width:min(250px,calc(100vw - 24px));font-size:11px}}
 @media(prefers-reduced-motion:reduce){.clickable:hover,.motion-spotlight{transform:none}}
