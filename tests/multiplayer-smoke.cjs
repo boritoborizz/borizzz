@@ -89,9 +89,11 @@ async function ask(action, token, room, extra = {}) {
   host = await ask('advance', 'host', room);
   assert.equal(host.players[1].turn, true);
   const privateRow = store.room_private.find(r => r.room_id === host.room.id);
-  privateRow.state.phase = 'reaction'; privateRow.state.deadline = Date.now() + 10000; privateRow.state.turn = 1;
-  const results = await Promise.all(['guest', 'guest'].map(async () => { const res = await context.module.exports.POST({ json: async () => ({ action: 'advance', token: 'guest', room }) }); return res.status; }));
-  assert.equal(results.filter(x => x === 200).length, 1, `one concurrent action should win: ${results}`);
-  assert.equal(results.filter(x => x === 409).length, 1, `stale concurrent action should conflict: ${results}`);
-  console.log('PASS: lobby, both private peeks, hidden card values, draw, discard, turn handoff, concurrent-write conflict');
+  Object.assign(privateRow.state, { phase: 'reaction', deadline: Date.now() + 10000, turn: 1, discard: [{ v: 5, id: 'top' }], lastDiscardBy: 'host', reacted: [], attempted: [], gift: null, special: null });
+  privateRow.state.hands.host[0] = { v: 5, id: 'host-match' };
+  privateRow.state.hands.guest[0] = { v: 5, id: 'guest-match' };
+  const results = await Promise.all(['guest', 'host'].map(async token => { const res = await context.module.exports.POST({ json: async () => ({ action: 'quickMatch', token, room, targetPlayerId: host.me.id, index: 0 }) }); return res.status; }));
+  assert.equal(results.filter(x => x === 200).length, 1, `one concurrent match should win: ${results}`);
+  assert.equal(results.filter(x => x === 409).length, 1, `stale concurrent match should conflict: ${results}`);
+  console.log('PASS: lobby, both private peeks, hidden card values, draw, discard, turn handoff, concurrent match conflict');
 })().catch(e => { console.error(e); process.exitCode = 1; });
