@@ -29,7 +29,7 @@ async function flight(source, target, face, duration = 700, delay = 0) {
 }
 async function spotlight(element, duration = 1250) {
  if (!element) return;
- if (reduced()) { element.scrollIntoView({ block: 'nearest', behavior: 'instant' }); return; }
+ if (reduced()) { element.scrollIntoView({ block: 'nearest', behavior: 'auto' }); return; }
  element.classList.add('motion-spotlight');
  try { await pause(duration); } finally { element.classList.remove('motion-spotlight'); }
 }
@@ -51,19 +51,17 @@ async function play(e, names, notify) {
  else if (e.kind === 'gift') { notify(`${who(e.actorId)} gibt eine Karte an ${who(e.targetId)}, Platz ${e.slot + 1}.`); await flight(from(e.actorId, e.index), from(e.targetId, e.slot), null, 950); }
  else if (e.kind === 'penalty') { notify(`${who(e.actorId)} erhält eine verdeckte Strafkarte.`); await flight(deck, from(e.actorId, e.index), null); }
 }
-/** Reacts to ordered public events. Never receives hidden card values. */
+/** Replays public actions in order; the latest action stays visible. */
 export default function SyncedMotion({ state }) {
  const seen = useRef(null), room = useRef(null), chain = useRef(Promise.resolve()), [caption, setCaption] = useState('');
- const players = state?.players || [], names = Object.fromEntries(players.map(p => [p.id, p.name]));
  useEffect(() => {
   if (!state?.room?.id) return;
-  if (room.current !== state.room.id) { room.current = state.room.id; seen.current = state.seq || 0; chain.current = Promise.resolve(); return; }
+  if (room.current !== state.room.id) { room.current = state.room.id; seen.current = state.seq || 0; chain.current = Promise.resolve(); setCaption(''); return; }
   const events = (state.events || []).filter(e => e.seq > (seen.current || 0)).sort((a, b) => a.seq - b.seq);
   if (!events.length) return;
   seen.current = events.at(-1).seq;
   const people = Object.fromEntries(state.players.map(p => [p.id, p.name]));
   for (const e of events) chain.current = chain.current.then(() => play(e, people, setCaption)).catch(() => {});
-  chain.current = chain.current.then(() => setCaption(''));
  }, [state?.room?.id, state?.seq, state?.events, state?.players]);
  return <div className="motion-caption" role="status" aria-live="polite" aria-atomic="true">{caption}</div>;
 }
